@@ -22,3 +22,23 @@ The directory structure of the repository is shown in the diagram.
 +-- submissions
 +-- visualizations
 ```
+
+### Train a model
+
+Inside models.py there is a class for specifying hyperparameters for a model. Also, the script contains functions that return a compiled model. Below is an example for training a model with an architecture defined in a function called `get_sample_model()`.
+
+```python
+DATA_PATH = '../data/input/'
+
+data_config = DataConfig()
+
+train_generator = make_train_generator(DATA_PATH, data_config)
+
+model_config = ModelConfig()
+model = get_sample_model(model_config)
+
+history = model.fit_generator(train_generator,
+                              epochs=model_config.max_epochs,
+                              use_multiprocessing=True, workers=2,
+                              max_queue_size=20)
+```
