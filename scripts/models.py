@@ -1,5 +1,9 @@
-from tensorflow.keras.layers import Dense, GlobalMaxPool1D, Input
+from tensorflow.keras.layers import (Dense, GlobalMaxPool1D, Input,
+                                     Convolution2D, BatchNormalization,
+                                     Flatten, Activation)
 from tensorflow.keras import losses, models, optimizers
+from tensorflow.keras.activations import softmax
+from keras_contrib.layers.capsule import Capsule
 
 
 class ModelConfig(object):
@@ -32,3 +36,45 @@ def get_dummy_model(config):
     model.compile(optimizer=opt, loss=losses.categorical_crossentropy,
                   metrics=['acc'])
     return model
+
+
+def get_baseline_model(config):
+
+    nclass = config.n_classes
+
+    inp = Input(shape=(config.dim[0], config.dim[1], 1))
+    x = Convolution2D(32, (4, 10), padding="same")(inp)
+    x = BatchNormalization()(x)
+    x = Activation("relu")(x)
+    x = Capsule(num_capsule=10, dim_capsule=16, routings=5,
+                activation='sigmoid', share_weights=True)
+
+    x = Convolution2D(32, (4, 10), padding="same")(x)
+    x = BatchNormalization()(x)
+    x = Activation("relu")(x)
+    x = Capsule(num_capsule=10, dim_capsule=16, routings=5,
+                activation='sigmoid', share_weights=True)(x)
+
+    x = Convolution2D(32, (4, 10), padding="same")(x)
+    x = BatchNormalization()(x)
+    x = Activation("relu")(x)
+    x = Capsule(num_capsule=10, dim_capsule=16, routings=5,
+                activation='sigmoid', share_weights=True)(x)
+
+    x = Convolution2D(32, (4, 10), padding="same")(x)
+    x = BatchNormalization()(x)
+    x = Activation("relu")(x)
+    x = Capsule(num_capsule=10, dim_capsule=16, routings=5,
+                activation='sigmoid', share_weights=True)(x)
+
+    x = Flatten()(x)
+    x = Dense(64)(x)
+    x = BatchNormalization()(x)
+    x = Activation("relu")(x)
+    out = Dense(nclass, activation=softmax)(x)
+
+    model = models.Model(inputs=inp, outputs=out)
+    opt = optimizers.Adam(config.learning_rate)
+
+    model.compile(optimizer=opt, loss=losses.categorical_crossentropy,
+                  metrics=['acc'])
