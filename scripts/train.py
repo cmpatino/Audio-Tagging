@@ -12,7 +12,10 @@ def train(model_name, data_config, model_config):
     train_df = du.create_train_df(DATA_PATH)
     print(train_df.label_idx.head())
 
-    model = models.get_dummy_model(model_config)
+    try:
+        model = getattr(models, f'get_{model_name}')(model_config)
+    except AttributeError:
+        raise ValueError(f'There is no creation function for {model_name}')
 
     skf = StratifiedKFold(model_config.n_folds)
     skf.get_n_splits(train_df.index)
