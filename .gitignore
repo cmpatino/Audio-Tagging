@@ -3,3 +3,9 @@ data/*
 
 # python related
 __pycache__
+
+# credentials
+credentials/*
+
+# model files
+*.h5
