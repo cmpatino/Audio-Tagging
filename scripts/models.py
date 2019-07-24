@@ -5,7 +5,7 @@ from tensorflow.keras import losses, models, optimizers
 class ModelConfig(object):
     def __init__(self,
                  sampling_rate=44100, audio_duration=2,
-                 n_folds=10, learning_rate=0.0001,
+                 n_folds=3, learning_rate=0.0001,
                  max_epochs=50, n_classes=41):
         self.sampling_rate = sampling_rate
         self.audio_duration = audio_duration
