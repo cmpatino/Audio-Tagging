@@ -1,8 +1,7 @@
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint
 import os
 import shutil
-import tensorflow as tf
 import numpy as np
 import pandas as pd
 
@@ -11,12 +10,13 @@ import models
 
 DATA_PATH = '../data/input/'
 
+
 def train_with_val(model_name, data_config, model_config):
 
     train_df = du.create_train_df(DATA_PATH)
 
     try:
-        model = getattr(models, f'get_{model_name}')(model_config)
+        model = getattr(models, f'get_{model_name}')(model_config, data_config)
     except AttributeError:
         raise ValueError(f'There is no creation function for {model_name}')
 
@@ -62,7 +62,7 @@ def train_for_submission(model_name, data_config, model_config):
     train_df = du.create_train_df(DATA_PATH)
 
     try:
-        model = getattr(models, f'get_{model_name}')(model_config)
+        model = getattr(models, f'get_{model_name}')(model_config, data_config)
     except AttributeError:
         raise ValueError(f'There is no creation function for {model_name}')
 

@@ -113,7 +113,6 @@ class DataGenerator(Sequence):
                 data = np.expand_dims(data, axis=-1)
             else:
                 data = self.preprocessing_fn(data)[:, np.newaxis]
-            print(data.shape)
             X[i, ] = data
 
         if self.labels is not None:

@@ -47,7 +47,7 @@ def get_baseline_model(model_config, data_config):
     x = BatchNormalization()(x)
     x = Activation("relu")(x)
     x = Capsule(num_capsule=10, dim_capsule=16, routings=5,
-                activation='sigmoid', share_weights=True)
+                activation='sigmoid', share_weights=True)(x)
 
     x = Convolution2D(32, (4, 10), padding="same")(x)
     x = BatchNormalization()(x)
