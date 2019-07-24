@@ -136,7 +136,7 @@ def create_train_df(data_dir):
     return df
 
 
-def make_train_generator(df, data_dir, config):
+def make_train_generator(df, data_dir, config, training=True):
     """Complete all the steps to read file paths and create generator for
     training and validation
 
@@ -152,10 +152,15 @@ def make_train_generator(df, data_dir, config):
     if config.verified_only:
         df = df[df.manually_verified == 1]
 
-    generator = DataGenerator(config, data_dir + 'audio_train/',
-                              df.index,
-                              df.label_idx, batch_size=64,
-                              preprocessing_fn=audio_norm)
+    if training:
+        generator = DataGenerator(config, data_dir + 'audio_train/',
+                                  df.index,
+                                  df.label_idx, batch_size=64,
+                                  preprocessing_fn=audio_norm)
+    else:
+        generator = DataGenerator(config, data_dir + 'audio_train/',
+                                  df.index, batch_size=128,
+                                  preprocessing_fn=audio_norm)
 
     return generator
 
@@ -172,8 +177,7 @@ def make_pred_generator(data_dir, config):
         tf.data.Dataset -- Data generator that can be used with fit_generator
     """
 
-    df = pd.read_csv(data_dir + 'test.csv')
-
+    df = pd.read_csv(data_dir + 'sample_submission.csv')
     df = df.set_index('fname')
     generator = DataGenerator(config, data_dir + 'audio_test/',
                               df.index,
