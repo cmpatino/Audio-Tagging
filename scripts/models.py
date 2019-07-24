@@ -1,8 +1,8 @@
-from tensorflow.keras.layers import (Dense, GlobalMaxPool1D, Input,
-                                     Convolution2D, BatchNormalization,
-                                     Flatten, Activation)
-from tensorflow.keras import losses, models, optimizers
-from tensorflow.keras.activations import softmax
+from keras.layers import (Dense, GlobalMaxPool1D, Input,
+                          Convolution2D, BatchNormalization,
+                          Flatten, Activation)
+from keras import losses, models, optimizers
+from keras.activations import softmax
 from keras_contrib.layers.capsule import Capsule
 
 
@@ -21,28 +21,28 @@ class ModelConfig(object):
         self.audio_length = self.sampling_rate * self.audio_duration
 
 
-def get_dummy_model(config):
+def get_dummy_model(model_config):
 
-    nclass = config.n_classes
-    input_length = config.audio_length
+    nclass = model_config.n_classes
+    input_length = model_config.audio_length
 
     inp = Input(shape=(input_length, 1))
     x = GlobalMaxPool1D()(inp)
     out = Dense(nclass, activation='softmax')(x)
 
     model = models.Model(inputs=inp, outputs=out)
-    opt = optimizers.Adam(config.learning_rate)
+    opt = optimizers.Adam(model_config.learning_rate)
 
     model.compile(optimizer=opt, loss=losses.categorical_crossentropy,
                   metrics=['acc'])
     return model
 
 
-def get_baseline_model(config):
+def get_baseline_model(model_config, data_config):
 
-    nclass = config.n_classes
+    nclass = model_config.n_classes
 
-    inp = Input(shape=(config.dim[0], config.dim[1], 1))
+    inp = Input(shape=(data_config.dim[0], data_config.dim[1], 1))
     x = Convolution2D(32, (4, 10), padding="same")(inp)
     x = BatchNormalization()(x)
     x = Activation("relu")(x)
@@ -74,7 +74,9 @@ def get_baseline_model(config):
     out = Dense(nclass, activation=softmax)(x)
 
     model = models.Model(inputs=inp, outputs=out)
-    opt = optimizers.Adam(config.learning_rate)
+    opt = optimizers.Adam(model_config.learning_rate)
 
     model.compile(optimizer=opt, loss=losses.categorical_crossentropy,
                   metrics=['acc'])
+
+    return model
