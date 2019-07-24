@@ -32,12 +32,18 @@ DATA_PATH = '../data/input/'
 
 data_config = DataConfig()
 
-train_generator = make_train_generator(DATA_PATH, data_config)
+train_generator = make_train_generator(DATA_PATH, 
+                                       data_config, 
+                                       train_filenames)
+val_generator = make_train_generator(DATA_PATH, 
+                                     data_config, 
+                                     val_filenames) 
 
 model_config = ModelConfig()
 model = get_sample_model(model_config)
 
-history = model.fit_generator(train_generator,
+history = model.fit_generator(train_generator, 
+                              validation_data=val_generator,
                               epochs=model_config.max_epochs,
                               use_multiprocessing=True, workers=2,
                               max_queue_size=20)

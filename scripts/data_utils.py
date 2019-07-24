@@ -124,11 +124,24 @@ class DataGenerator(Sequence):
             return X
 
 
-def make_train_generator(data_dir, config):
+def create_train_df(data_dir):
+
+    df = pd.read_csv(data_dir + 'train.csv')
+    df = df.set_index('fname')
+
+    unique_labels = list(df.label.unique())
+    label_idx = {label: i for i, label in enumerate(unique_labels)}
+    df["label_idx"] = df.label.apply(lambda x: label_idx[x])
+
+    return df
+
+
+def make_train_generator(df, data_dir, config):
     """Complete all the steps to read file paths and create generator for
     training and validation
 
     Arguments:
+        df {pd.DataFrame} -- dataframe with filenames and label indexes
         data_dir {str} -- data directory
         config {DataConfig} -- class with configurations for generator
 
@@ -136,19 +149,12 @@ def make_train_generator(data_dir, config):
         tf.data.Dataset -- Data generator that can be used with fit_generator
     """
 
-    train_df = pd.read_csv(data_dir + 'train.csv')
-
     if config.verified_only:
-        train_df = train_df[train_df.manually_verified == 1]
-
-    train_df = train_df.set_index('fname')
-    unique_labels = list(train_df.label.unique())
-    label_idx = {label: i for i, label in enumerate(unique_labels)}
-    train_df["label_idx"] = train_df.label.apply(lambda x: label_idx[x])
+        df = df[df.manually_verified == 1]
 
     generator = DataGenerator(config, data_dir + 'audio_train/',
-                              train_df.index,
-                              train_df.label_idx, batch_size=64,
+                              df.index,
+                              df.label_idx, batch_size=64,
                               preprocessing_fn=audio_norm)
 
     return generator
