@@ -25,7 +25,7 @@ class DataConfig(object):
     """
     def __init__(self,
                  sampling_rate=44100, audio_duration=2, n_classes=41,
-                 use_mfcc=False, n_mfcc=20, verified_only=False):
+                 use_mfcc=True, n_mfcc=20, verified_only=False):
         self.sampling_rate = sampling_rate
         self.audio_duration = audio_duration
         self.n_classes = n_classes
@@ -113,6 +113,7 @@ class DataGenerator(Sequence):
                 data = np.expand_dims(data, axis=-1)
             else:
                 data = self.preprocessing_fn(data)[:, np.newaxis]
+            print(data.shape)
             X[i, ] = data
 
         if self.labels is not None:
