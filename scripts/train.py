@@ -220,7 +220,7 @@ def splitting_dataset(data_dir, valid_size=1500):
         valid_names=sources_df_verified_original_valid.filename.str.split('.').str.get(0)
         sources_df.loc[sources_df_verified_original_valid.index, 'split'] = 'valid'
         sources_df['or_names']=sources_df.filename.str.split('.').str.get(0).str.split('_').str.get(0)
-        sources_df=sources_df[~sources_df['or_names'].isin(valid_names)]
+        sources_df=sources_df[~((sources_df['or_names'].isin(valid_names)) & (sources_df['split']=='train'))]
         print(sources_df.head(5))
         print(sources_df.shape)
     else:
