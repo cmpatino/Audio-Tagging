@@ -248,5 +248,5 @@ model_name = 'aug_baseline_model'
 data_config = du.DataConfig(augment=True)
 model_config = models.ModelConfig(max_epochs=1)
 
-train_with_val(model_name, data_config, model_config, make_submission=False, augment=True)
+train_with_val(model_name, data_config, model_config, make_submission=True, augment=True)
 # make_submission(model_name)
