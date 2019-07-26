@@ -6,7 +6,8 @@ import pandas as pd
 import random
 import numpy as np
 from sklearn.model_selection import train_test_split
-# Let's work in the tensorflow's eager mode, which is more intuitive
+import matplotlib.pyplot as plt
+# # Let's work in the tensorflow's eager mode, which is more intuitive
 tf.enable_eager_execution()
 
 print(os.getcwd())
@@ -101,18 +102,18 @@ def make_dataset(sources, training=False, batch_size=1,
         [N, H, W, CH] and labels shape [N, 1].
     """
     def load_npy(filepath):
-        npy=np.load(filepath)
-        print('npy_in',npy)
+        # print('filepath: ........',filepath.numpy())
+        npy=np.load(filepath.numpy())
+        # print('npy_in',npy)
         return npy
 
     def load(row):
         print(row)
         filepath = row['image']
-        print(filepath)
-        npy = tf.io.read_file(filepath)
+        # print(filepath)
         # img_npy = tf.decode_raw(npy, tf.float32)
-        img_npy = tf.py_function(func=load_npy, inp=[npy], Tout=tf.float32)
-        print('img_npy',img_npy)
+        img_npy = tf.py_function(func=load_npy, inp=[filepath], Tout=tf.float32)
+        # print('img_npy',img_npy)
         return img_npy, row['label']
 
     images, labels = zip(*sources)
@@ -138,15 +139,20 @@ def imshow_batch_of_three(batch, show_label=True):
     fig, axarr = plt.subplots(1, 3, figsize=(15, 5), sharey=True)
     for i in range(3):
         img = image_batch[i, ...]
-        axarr[i].imshow(img)
+        axarr[i].imshow(img, aspect='auto', origin='lower')
         if show_label:
             axarr[i].set(xlabel='label = {}'.format(label_batch[i]))
+    plt.show()
+
 
 sources_df_train=splitting_dataset(SPECTROGRAMS_TRAIN, valid_size=1500)
 sources_df_test=pd.read_csv(SPECTROGRAMS_TEST)
 sources_train=build_sources_from_metadata(sources_df_train, PRE_DATA_TRAIN, mode='train', label_type='id')
+sources_test=build_sources_from_metadata(sources_df_train, PRE_DATA_TEST, mode='test', label_type='id')
 print(sources_train[:10])
-dataset=make_dataset(sources_train, training=False, batch_size=3, num_epochs=1, num_parallel_calls=3, shuffle_buffer_size=None)
+dataset_train=make_dataset(sources_train, training=False, batch_size=3, num_epochs=1, num_parallel_calls=3, shuffle_buffer_size=None)
+dataset_valid=make_dataset(sources_train, training=False, batch_size=3, num_epochs=1, num_parallel_calls=3, shuffle_buffer_size=None)
+dataset_test=make_dataset(sources_train, training=False, batch_size=3, num_epochs=1, num_parallel_calls=3, shuffle_buffer_size=None)
 dataset = iter(dataset)
 print(next(dataset))
-# imshow_batch_of_three(next(dataset))
+imshow_batch_of_three(next(dataset))
