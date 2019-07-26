@@ -216,8 +216,13 @@ def splitting_dataset(data_dir, valid_size=1500):
         _, sources_df_verified_original_valid = train_test_split(sources_df_verified_original,
                                                                  test_size=valid_size,
                                                                  stratify=sources_df_verified_original['str_label'])
+        print(sources_df_verified_original_valid)
+        valid_names=sources_df_verified_original_valid.filename.str.split('.').str.get(0)
         sources_df.loc[sources_df_verified_original_valid.index, 'split'] = 'valid'
+        sources_df['or_names']=sources_df.filename.str.split('.').str.get(0).str.split('_').str.get(0)
+        sources_df=sources_df[~sources_df['or_names'].isin(valid_names)]
         print(sources_df.head(5))
+        print(sources_df.shape)
     else:
         print('Error: Bad handling with valid size. All will be train split')
     return sources_df
