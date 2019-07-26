@@ -12,3 +12,8 @@ credentials/*
 
 # submission files
 /submissions/*
+
+.ipynb_checkpoints
+
+# plots
+visualizations/*
