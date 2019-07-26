@@ -63,7 +63,7 @@ def train_with_val(model_name, data_config, model_config,
                                                 data_config, augment=True)
 
     directory = f'../models/{model_name}/'
-    """
+    
     if os.path.exists(directory):
         replace = input(f'Do you want to replace the current \
                         {directory} dir? [Y/N]\n')
@@ -77,16 +77,17 @@ def train_with_val(model_name, data_config, model_config,
     checkpoint = ModelCheckpoint(directory + 'best_train_val.h5',
                                  monitor='val_loss',
                                  verbose=1, save_best_only=True)
+    early_stop = EarlyStopping(monitor = "val_loss", mode = "min", patience = 5)
     history = model.fit_generator(train_generator,
                                   validation_data=val_generator,
                                   epochs=model_config.max_epochs,
                                   use_multiprocessing=True, workers=4,
                                   max_queue_size=20,
-                                  callbacks=[checkpoint])
+                                  callbacks=[checkpoint, early_stop])
 
     with open(directory + 'history_train_val.pkl', 'wb') as f:
         pickle.dump(history.history, f)
-    """
+    
     model.load_weights(directory + 'best_train_val.h5')
 
     if make_submission:
@@ -258,7 +259,7 @@ def build_sources_from_metadata(metadata, data_dir, mode='train',
 tf.keras.backend.clear_session()
 model_name = 'aug_baseline_model'
 data_config = du.DataConfig(augment=True)
-model_config = models.ModelConfig(max_epochs=1)
+model_config = models.ModelConfig(max_epochs=100)
 
 train_with_val(model_name, data_config, model_config, make_submission=True, augment=True)
 # make_submission(model_name)

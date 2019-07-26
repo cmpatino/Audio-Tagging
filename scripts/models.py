@@ -40,16 +40,32 @@ def get_dummy_model(model_config, data_config):
 
 def get_aug_baseline_model(model_config, data_config):
 
-
-
     nclass = model_config.n_classes
     inp = Input(shape=(data_config.dim[0], data_config.dim[1], data_config.dim[2]))
     x = Convolution2D(32, (4, 10), padding="same")(inp)
     x = BatchNormalization()(x)
     x = Activation("relu")(x)
     x = MaxPool2D()(x)
-    x = GlobalMaxPool2D()(x)
 
+    x = Convolution2D(32, (4, 10), padding="same")(x)
+    x = BatchNormalization()(x)
+    x = Activation("relu")(x)
+    x = MaxPool2D()(x)
+
+    x = Convolution2D(32, (4, 10), padding="same")(x)
+    x = BatchNormalization()(x)
+    x = Activation("relu")(x)
+    x = MaxPool2D()(x)
+
+    x = Convolution2D(32, (4, 10), padding="same")(x)
+    x = BatchNormalization()(x)
+    x = Activation("relu")(x)
+    x = MaxPool2D()(x)
+
+    x = Flatten()(x)
+    x = Dense(64)(x)
+    x = BatchNormalization()(x)
+    x = Activation("relu")(x)
     out = Dense(nclass, activation=softmax)(x)
 
     model = models.Model(inputs=inp, outputs=out)
