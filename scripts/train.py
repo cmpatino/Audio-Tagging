@@ -12,6 +12,7 @@ import models
 DATA_PATH = '../data/input/'
 PRE_DATA_TRAIN = '../data/preprocessed/train'
 SPECTROGRAMS_TRAIN = '../data/spectrograms_df_train.csv'
+SPECTROGRAMS_TEST = '../data/spectrograms_df_test.csv'
 
 
 def train_with_val(model_name, data_config, model_config,
@@ -86,7 +87,6 @@ def train_with_val(model_name, data_config, model_config,
         pickle.dump(history.history, f)
 
     if make_submission:
-
         if not augment:
             test_generator = du.make_pred_generator(DATA_PATH,
                                                     data_config)
@@ -94,7 +94,6 @@ def train_with_val(model_name, data_config, model_config,
             test_generator = du.make_pred_generator(DATA_PATH,
                                                     data_config,
                                                     augment=True)
-
         predictions = model.predict_generator(test_generator, verbose=1)
 
         # Save predictions
@@ -102,12 +101,18 @@ def train_with_val(model_name, data_config, model_config,
 
         # Make a submission file
         train_df = du.create_train_df(DATA_PATH)
-        test_df = pd.read_csv(DATA_PATH + 'sample_submission.csv')
-        test_df = test_df[['fname']].copy()
-        labels = list(train_df.label.unique())
+        test_df = pd.read_csv(SPECTROGRAMS_TEST)
+        train_df = pd.read_csv(SPECTROGRAMS_TRAIN)
+        train_df['id']=train_df.label.apply(lambda x: np.nonzero(np.array(x.replace('\n','').replace('[','').replace(']','').split(' '), dtype=np.int16))[0][0])
+        id_label=train_df.groupby(['id','str_label'])['label'].count()
+        labels = id_label.reset_index().str_label.tolist()
+        # test_df = pd.read_csv(DATA_PATH + 'sample_submission.csv')
+        # test_df = test_df[['filename']].copy()
+        # labels = list(train_df.label.unique())
         top_3 = np.array(labels)[np.argsort(-predictions, axis=1)[:, :3]]
         predicted_labels = [' '.join(list(x)) for x in top_3]
         test_df['label'] = predicted_labels
+        test_df.rename(columns={'filename':'fname'}, inplace=True)
         test_df.to_csv(f'../submissions/submission_train_val_{model_name}.csv',
                        index=False)
 
