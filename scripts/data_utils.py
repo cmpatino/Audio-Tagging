@@ -170,13 +170,13 @@ class AugmentedDataGenerator(Sequence):
 
     def __data_generation(self, list_IDs_temp):
         cur_batch_size = len(list_IDs_temp)
-        print('*'*50, self.dim)
         X = np.empty((cur_batch_size, *self.dim))
 
         for i, ID in enumerate(list_IDs_temp):
             filepath = ID
 
             data = np.load(filepath)
+            data = data[...,None]
             X[i, ] = data
 
         if self.labels is not None:
@@ -231,7 +231,7 @@ def make_train_generator(df, data_dir, config, training=True, augment=False):
         generator = AugmentedDataGenerator(config,
                                            '../data/preprocessed/train/',
                                            df.index, df.label_idx,
-                                           batch_size=128,
+                                           batch_size=16,
                                            preprocessing_fn=audio_norm)
 
     return generator

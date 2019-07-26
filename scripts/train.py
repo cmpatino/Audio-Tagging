@@ -5,7 +5,7 @@ import shutil
 import numpy as np
 import pandas as pd
 import pickle
-
+import tensorflow as tf
 import data_utils as du
 import models
 
@@ -24,7 +24,6 @@ def train_with_val(model_name, data_config, model_config,
     except AttributeError:
         raise ValueError(f'There is no creation function for {model_name}')
 
-    data_config = du.DataConfig()
 
     if not augment:
 
@@ -244,9 +243,9 @@ def build_sources_from_metadata(metadata, data_dir, mode='train',
     return sources
 
 
+tf.keras.backend.clear_session()
 model_name = 'aug_baseline_model'
 data_config = du.DataConfig(augment=True)
-print('-'*50, data_config.dim)
 model_config = models.ModelConfig(max_epochs=1)
 
 train_with_val(model_name, data_config, model_config, make_submission=False, augment=True)

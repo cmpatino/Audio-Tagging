@@ -43,11 +43,8 @@ def get_aug_baseline_model(model_config, data_config):
 
 
     nclass = model_config.n_classes
-    print(data_config.dim)
-    inp = Input(shape=(data_config.dim[0], data_config.dim[1], 1))
-    print('INP', inp)
+    inp = Input(shape=(data_config.dim[0], data_config.dim[1], data_config.dim[2]))
     x = Convolution2D(32, (4, 10), padding="same")(inp)
-    print('CONV1', x)
     x = BatchNormalization()(x)
     x = Activation("relu")(x)
     x = MaxPool2D()(x)
