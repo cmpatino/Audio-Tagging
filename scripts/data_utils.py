@@ -174,7 +174,6 @@ class AugmentedDataGenerator(Sequence):
 
         for i, ID in enumerate(list_IDs_temp):
             filepath = ID
-
             data = np.load(filepath)
             data = data[...,None]
             X[i, ] = data
@@ -257,9 +256,10 @@ def make_pred_generator(data_dir, config, augment=False):
                                   batch_size=64,
                                   preprocessing_fn=audio_norm)
     else:
-        sources_df_test = pd.read_csv(SPECTROGRAMS_TEST)
-        df = pd.DataFrame(sources_df_test, columns=['fname'])
-        df = df.set_index('fname')
-        generator = AugmentedDataGenerator(config, '../data/preprocessed/test')
+        df = pd.read_csv(SPECTROGRAMS_TEST)
+        df['filename'] = '../data/preprocessed/test/' + df['filename']
+        #df = pd.DataFrame(sources_df_test, columns=['fname'])
+        df = df.set_index('filename')
+        generator = AugmentedDataGenerator(config, '../data/preprocessed/test', df.index)
 
     return generator

@@ -63,6 +63,7 @@ def train_with_val(model_name, data_config, model_config,
                                                 data_config, augment=True)
 
     directory = f'../models/{model_name}/'
+    """
     if os.path.exists(directory):
         replace = input(f'Do you want to replace the current \
                         {directory} dir? [Y/N]\n')
@@ -85,6 +86,8 @@ def train_with_val(model_name, data_config, model_config,
 
     with open(directory + 'history_train_val.pkl', 'wb') as f:
         pickle.dump(history.history, f)
+    """
+    model.load_weights(directory + 'best_train_val.h5')
 
     if make_submission:
         if not augment:
@@ -112,7 +115,11 @@ def train_with_val(model_name, data_config, model_config,
         top_3 = np.array(labels)[np.argsort(-predictions, axis=1)[:, :3]]
         predicted_labels = [' '.join(list(x)) for x in top_3]
         test_df['label'] = predicted_labels
-        test_df.rename(columns={'filename':'fname'}, inplace=True)
+        add_df={'filename':['0b0427e2.npy', '6ea0099f.npy', 'b39975f5.npy'],'label':['Gong Microwave_oven Burping_or_eructation','Gong Microwave_oven Burping_or_eructation','Gong Microwave_oven Burping_or_eructation']}
+        df_to_append=pd.DataFrame(add_df)
+        test_df=test_df.append(df_to_append)
+        test_df['filename']=test_df['filename'].str.split('.').str.get(0) + '.wav'
+        test_df.rename(columns={'filename': 'fname'}, inplace=True)
         test_df.to_csv(f'../submissions/submission_train_val_{model_name}.csv',
                        index=False)
 
