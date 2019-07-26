@@ -3,6 +3,10 @@ import pandas as pd
 import librosa
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.utils import Sequence
+import os
+
+
+SPECTROGRAMS_TEST = '../data/spectrograms_df_test.csv'
 
 
 def audio_norm(data):
@@ -25,11 +29,11 @@ class DataConfig(object):
     """
     def __init__(self,
                  sampling_rate=44100, audio_duration=2, n_classes=41,
-                 use_mfcc=True, n_mfcc=20, verified_only=False):
+                 transformation='mfcc', n_mfcc=20, verified_only=False):
         self.sampling_rate = sampling_rate
         self.audio_duration = audio_duration
         self.n_classes = n_classes
-        self.use_mfcc = use_mfcc
+        self.transformation = transformation
         self.n_mfcc = n_mfcc
         self.verified_only = verified_only
 
@@ -107,12 +111,66 @@ class DataGenerator(Sequence):
             data = self.normalize_duration(data)
 
             # Normalization + Other Preprocessing
-            if self.config.use_mfcc:
+            if self.transformation == 'mfcc':
                 data = librosa.feature.mfcc(data, sr=self.config.sampling_rate,
                                             n_mfcc=self.config.n_mfcc)
                 data = np.expand_dims(data, axis=-1)
             else:
                 data = self.preprocessing_fn(data)[:, np.newaxis]
+            X[i, ] = data
+
+        if self.labels is not None:
+            y = np.empty(cur_batch_size, dtype=int)
+            for i, ID in enumerate(list_IDs_temp):
+                y[i] = self.labels[ID]
+            return X, to_categorical(y, num_classes=self.config.n_classes)
+        else:
+            return X
+
+
+class AugmentedDataGenerator(Sequence):
+    """Class for creating a data generator that can be used with Keras models
+
+    Arguments:
+        Sequence {tf.keras.utils} -- Sequence object type
+
+    Returns:
+        tf.data.Dataset -- Data generator that can be used with fit_generator
+    """
+    def __init__(self, config, data_dir, list_IDs, labels=None,
+                 batch_size=64, preprocessing_fn=lambda x: x):
+        self.config = config
+        self.data_dir = data_dir
+        self.list_IDs = list_IDs
+        self.labels = labels
+        self.batch_size = batch_size
+        self.preprocessing_fn = preprocessing_fn
+        self.on_epoch_end()
+        self.dim = self.config.dim
+        self.DATA_PATH = os.path.join(os.getcwd(), '../data')
+        self.AUDIO_TRAIN = os.path.join(self.DATA_PATH, 'input/audio_train')
+        self.AUDIO_TEST = os.path.join(self.DATA_PATH, 'input/audio_test')
+        self.PRE_DATA_TEST = os.path.join(self.DATA_PATH, 'preprocessed/test')
+
+    def __len__(self):
+        return int(np.ceil(len(self.list_IDs) / self.batch_size))
+
+    def __getitem__(self, index):
+        indexes = self.indexes[index*self.batch_size:(index+1)*self.batch_size]
+        list_IDs_temp = [self.list_IDs[k] for k in indexes]
+        return self.__data_generation(list_IDs_temp)
+
+    def on_epoch_end(self):
+        self.indexes = np.arange(len(self.list_IDs))
+
+    def __data_generation(self, list_IDs_temp):
+        cur_batch_size = len(list_IDs_temp)
+        X = np.empty((cur_batch_size, *self.dim))
+
+        for i, ID in enumerate(list_IDs_temp):
+            filepath = self.data_dir + ID
+
+            data = np.load(filepath)
             X[i, ] = data
 
         if self.labels is not None:
@@ -136,7 +194,7 @@ def create_train_df(data_dir):
     return df
 
 
-def make_train_generator(df, data_dir, config, training=True):
+def make_train_generator(df, data_dir, config, training=True, augment=False):
     """Complete all the steps to read file paths and create generator for
     training and validation
 
@@ -149,23 +207,31 @@ def make_train_generator(df, data_dir, config, training=True):
         tf.data.Dataset -- Data generator that can be used with fit_generator
     """
 
-    if config.verified_only:
-        df = df[df.manually_verified == 1]
+    if not augment:
+        if config.verified_only:
+            df = df[df.manually_verified == 1]
 
-    if training:
-        generator = DataGenerator(config, data_dir + 'audio_train/',
-                                  df.index,
-                                  df.label_idx, batch_size=64,
-                                  preprocessing_fn=audio_norm)
+        if training:
+            generator = DataGenerator(config, data_dir + 'audio_train/',
+                                      df.index,
+                                      df.label_idx, batch_size=64,
+                                      preprocessing_fn=audio_norm)
+        else:
+            generator = DataGenerator(config, data_dir + 'audio_train/',
+                                      df.index, batch_size=128,
+                                      preprocessing_fn=audio_norm)
     else:
-        generator = DataGenerator(config, data_dir + 'audio_train/',
-                                  df.index, batch_size=128,
-                                  preprocessing_fn=audio_norm)
+
+        generator = AugmentedDataGenerator(config,
+                                           '../data/preprocessed/train/',
+                                           df.index, df.label_idx,
+                                           batch_size=128,
+                                           preprocessing_fn=audio_norm)
 
     return generator
 
 
-def make_pred_generator(data_dir, config):
+def make_pred_generator(data_dir, config, augment=False):
     """Complete all the steps to read file paths and create generator
     for prediction
 
@@ -177,11 +243,17 @@ def make_pred_generator(data_dir, config):
         tf.data.Dataset -- Data generator that can be used with fit_generator
     """
 
-    df = pd.read_csv(data_dir + 'sample_submission.csv')
-    df = df.set_index('fname')
-    generator = DataGenerator(config, data_dir + 'audio_test/',
-                              df.index,
-                              batch_size=64,
-                              preprocessing_fn=audio_norm)
+    if not augment:
+        df = pd.read_csv(data_dir + 'sample_submission.csv')
+        df = df.set_index('fname')
+        generator = DataGenerator(config, data_dir + 'audio_test/',
+                                  df.index,
+                                  batch_size=64,
+                                  preprocessing_fn=audio_norm)
+    else:
+        sources_df_test = pd.read_csv(SPECTROGRAMS_TEST)
+        df = pd.DataFrame(sources_df_test, columns=['fname'])
+        df = df.set_index('fname')
+        generator = AugmentedDataGenerator(config, '../data/preprocessed/test')
 
     return generator
