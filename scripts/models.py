@@ -1,4 +1,4 @@
-from tensorflow.keras.layers import (Dense, GlobalMaxPool1D, Input,
+from tensorflow.keras.layers import (Dense, GlobalMaxPool1D, GlobalMaxPool2D, Input,
                                      Convolution2D, BatchNormalization,
                                      MaxPool2D, Flatten, Activation)
 from tensorflow.keras import losses, models, optimizers
@@ -21,7 +21,7 @@ class ModelConfig(object):
         self.audio_length = self.sampling_rate * self.audio_duration
 
 
-def get_dummy_model(model_config):
+def get_dummy_model(model_config, data_config):
 
     nclass = model_config.n_classes
     input_length = model_config.audio_length
@@ -37,6 +37,31 @@ def get_dummy_model(model_config):
                   metrics=['acc'])
     return model
 
+
+def get_aug_baseline_model(model_config, data_config):
+
+
+
+    nclass = model_config.n_classes
+    print(data_config.dim)
+    inp = Input(shape=(data_config.dim[0], data_config.dim[1], 1))
+    print('INP', inp)
+    x = Convolution2D(32, (4, 10), padding="same")(inp)
+    print('CONV1', x)
+    x = BatchNormalization()(x)
+    x = Activation("relu")(x)
+    x = MaxPool2D()(x)
+    x = GlobalMaxPool2D()(x)
+
+    out = Dense(nclass, activation=softmax)(x)
+
+    model = models.Model(inputs=inp, outputs=out)
+    opt = optimizers.Adam(model_config.learning_rate)
+
+    model.compile(optimizer=opt, loss=losses.categorical_crossentropy,
+                  metrics=['acc'])
+    print(model.summary())
+    return model
 
 def get_baseline_model(model_config, data_config):
 
@@ -74,7 +99,7 @@ def get_baseline_model(model_config, data_config):
 
     model.compile(optimizer=opt, loss=losses.categorical_crossentropy,
                   metrics=['acc'])
-
+    print(model.summary())
     return model
 
 

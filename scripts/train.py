@@ -244,9 +244,10 @@ def build_sources_from_metadata(metadata, data_dir, mode='train',
     return sources
 
 
-model_name = 'baseline_model'
-data_config = du.DataConfig()
+model_name = 'aug_baseline_model'
+data_config = du.DataConfig(augment=True)
+print('-'*50, data_config.dim)
 model_config = models.ModelConfig(max_epochs=1)
 
-train_with_val(model_name, data_config, model_config, make_submission=True)
+train_with_val(model_name, data_config, model_config, make_submission=False, augment=True)
 # make_submission(model_name)

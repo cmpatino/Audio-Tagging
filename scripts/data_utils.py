@@ -29,21 +29,25 @@ class DataConfig(object):
     """
     def __init__(self,
                  sampling_rate=44100, audio_duration=2, n_classes=41,
-                 transformation='mfcc', n_mfcc=20, verified_only=False):
+                 transformation=None, n_mfcc=20, verified_only=False,
+                 augment=False):
         self.sampling_rate = sampling_rate
         self.audio_duration = audio_duration
         self.n_classes = n_classes
         self.transformation = transformation
         self.n_mfcc = n_mfcc
+        self.augment = augment
         self.verified_only = verified_only
 
         self.audio_length = self.sampling_rate * self.audio_duration
-        if self.use_mfcc:
+        if self.transformation == 'mfcc':
             self.dim = (self.n_mfcc,
                         1 + int(np.floor(self.audio_length/512)),
                         1)
         else:
             self.dim = (self.audio_length, 1)
+        if self.augment:
+            self.dim = (1013, 436, 1)
 
 
 class DataGenerator(Sequence):
@@ -147,6 +151,7 @@ class AugmentedDataGenerator(Sequence):
         self.preprocessing_fn = preprocessing_fn
         self.on_epoch_end()
         self.dim = self.config.dim
+        print('AUGMENTEDCLASS DIMS', self.dim)
         self.DATA_PATH = os.path.join(os.getcwd(), '../data')
         self.AUDIO_TRAIN = os.path.join(self.DATA_PATH, 'input/audio_train')
         self.AUDIO_TEST = os.path.join(self.DATA_PATH, 'input/audio_test')
@@ -165,10 +170,11 @@ class AugmentedDataGenerator(Sequence):
 
     def __data_generation(self, list_IDs_temp):
         cur_batch_size = len(list_IDs_temp)
+        print('*'*50, self.dim)
         X = np.empty((cur_batch_size, *self.dim))
 
         for i, ID in enumerate(list_IDs_temp):
-            filepath = self.data_dir + ID
+            filepath = ID
 
             data = np.load(filepath)
             X[i, ] = data
