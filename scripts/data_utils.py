@@ -226,11 +226,11 @@ def make_train_generator(df, data_dir, config, training=True, augment=False):
                                       df.index, batch_size=128,
                                       preprocessing_fn=audio_norm)
     else:
-
+        print('df_AUG GEN',df.head())
         generator = AugmentedDataGenerator(config,
                                            '../data/preprocessed/train/',
                                            df.index, df.label_idx,
-                                           batch_size=16,
+                                           batch_size=8,
                                            preprocessing_fn=audio_norm)
 
     return generator
