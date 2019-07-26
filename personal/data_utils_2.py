@@ -8,9 +8,8 @@ from sklearn import preprocessing
 import random
 import numpy as np
 import matplotlib.pyplot as plt
-from pydub import AudioSegment
 import random
-rando.seed(10)
+random.seed(10)
 # Let's work in the tensorflow's eager mode, which is more intuitive
 tf.enable_eager_execution()
 
@@ -18,11 +17,11 @@ class DataProcess():
     def __init__(self):
         # Variables
         print(os.getcwd())
-        self.DATA_PATH=os.path.join(os.getcwd(),r'..\data')
-        self.AUDIO_TRAIN=os.path.join(self.DATA_PATH,'audio_train')
-        self.AUDIO_TEST=os.path.join(self.DATA_PATH,'audio_test')
-        self.PRE_DATA_TRAIN=os.path.join(self.DATA_PATH,r'preprocessed\train')
-        self.PRE_DATA_TEST=os.path.join(self.DATA_PATH,r'preprocessed\test')
+        self.DATA_PATH=os.path.join(os.getcwd(),'../data')
+        self.AUDIO_TRAIN=os.path.join(self.DATA_PATH,'input/audio_train')
+        self.AUDIO_TEST=os.path.join(self.DATA_PATH,'input/audio_test')
+        self.PRE_DATA_TRAIN=os.path.join(self.DATA_PATH,'preprocessed/train')
+        self.PRE_DATA_TEST=os.path.join(self.DATA_PATH,'preprocessed/test')
         self.EPS = 1e-8
         self.THRESHOLD_SPLIT=0.8
         self.sample_rate=44100 #Sample rate of audios
@@ -40,8 +39,8 @@ class DataProcess():
 
     def read_csv_file(self):
         # Reading csvs
-        self.metadata_test=pd.read_csv(os.path.join(self.DATA_PATH,'sample_submission.csv'))
-        self.metadata_train=pd.read_csv(os.path.join(self.DATA_PATH,'train.csv'))
+        self.metadata_test=pd.read_csv(os.path.join(self.DATA_PATH,'input/sample_submission.csv'))
+        self.metadata_train=pd.read_csv(os.path.join(self.DATA_PATH,'input/train.csv'))
 
         #Encoding labels
         self.UNIQUE_CLASSES=self.metadata_train['label'].unique()
@@ -83,17 +82,20 @@ class DataProcess():
                 return None
             df=self.metadata_train
             path_to_save=self.PRE_DATA_TRAIN
+            current_src_path=self.AUDIO_TRAIN
         elif mode=='test':
             if self.created_test:
                 print('Test data already created. Erase it first')
                 return None
             df=self.metadata_test
             path_to_save=self.PRE_DATA_TEST
+            current_src_path=self.AUDIO_TEST
         spectrogram_df=[]
         #print('df:',df.head())
         # Audio processing
         audio_files=df['filepath'].values
         for idx, audio_file in enumerate(audio_files):
+            audio_file = os.path.join(current_src_path, audio_file)
             raw_audio_wav = self.obtaining_audio(audio_file)
             if raw_audio_wav.shape[0]==0:
                 print('idx, audio_file: ', (idx, audio_file))
