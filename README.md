@@ -4,7 +4,7 @@
 
 This repository contains the solution for the [Freesound General-Purpose Audio Tagging Challenge](https://www.kaggle.com/c/freesound-audio-tagging/overview/) competition on Kaggle.
 
-The objective of the challenge is to predict the 3 most likely labels for a a given audio. The task is evaluated using the MAP@3 metric. 
+The objective of the challenge is to predict the 3 most likely labels for a a given audio. The task is evaluated using the MAP@3 metric.
 
 ## How to run
 
@@ -14,37 +14,19 @@ The directory structure of the repository is shown in the diagram.
 +-- data
 |   +-- input
 +-- models
-|   +-- model_1
-|   +-- model_2
-|    +-- model_i
+|   +-- model_name_1
+|   +-- model_name_2
+|   +-- model_name_3
 +-- notebooks
 +-- scripts
 +-- submissions
 +-- visualizations
 ```
 
-### Train a model
+There are two modes to run training: 
++ Training with validation set using the function `train_with_val()`
++ Training for best submission  using the function `make_submission()`
 
-Inside models.py there is a class for specifying hyperparameters for a model. Also, the script contains functions that return a compiled model. Below is an example for training a model with an architecture defined in a function called `get_sample_model()`.
+The mode that creates a validation set is ideal for testing the performance of the model using the validation set. Measuring the performance metrics on the validation set helps avoid problems such as overfitting or underfitting.
 
-```python
-DATA_PATH = '../data/input/'
-
-data_config = DataConfig()
-
-train_generator = make_train_generator(DATA_PATH, 
-                                       data_config, 
-                                       train_filenames)
-val_generator = make_train_generator(DATA_PATH, 
-                                     data_config, 
-                                     val_filenames) 
-
-model_config = ModelConfig()
-model = get_sample_model(model_config)
-
-history = model.fit_generator(train_generator, 
-                              validation_data=val_generator,
-                              epochs=model_config.max_epochs,
-                              use_multiprocessing=True, workers=2,
-                              max_queue_size=20)
-```
+The mode with trainig for best submission does not split the training data into train and test sets. Instead, the entirety of the training data is used to train the model. This mode is ideal for maximizing the peformance of the model on the Kaggle score when the best hyperparameters are already known.
